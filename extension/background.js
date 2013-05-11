@@ -6,8 +6,9 @@ var ncr = {
 	applied: {}, // store status of NCR for recent domains
 
 	init : function() {
-		console.log("started");
+//		console.log("started");
 		ncr.init_interceptor();
+        ncr.nav_logger.init();
 	},
 
 	is_domain_served: function (domain) {
@@ -42,7 +43,7 @@ var ncr = {
 				var is_ncr = ncr.is_ncr_set(cookie_info.cookies),
 					new_header = "";
 
-				console.log("cookie_info", cookie_info, "is_NCR?", is_ncr);
+//				console.log("cookie_info", cookie_info, "is_NCR?", is_ncr);
 
 				if (is_ncr === false) { // NCR cookie is absent
 					if (cookie_info.header_index !== undefined) {
@@ -86,7 +87,9 @@ var ncr = {
 
 		}
 
-		console.log("Final headers:", details.requestHeaders);
+//		console.log("Final headers:", details.requestHeaders);
+
+        ncr.nav_logger.add_track(details.tabId, url, details.type, details.timeStamp);
 
 		return {requestHeaders: details.requestHeaders};
 	},
@@ -94,7 +97,7 @@ var ncr = {
 	indicate: function (tabId, changeInfo, tab) {
 
 		if (changeInfo.status == "complete") {
-			console.log(arguments);
+//			console.log(arguments);
 
 			var domain = ncr.get_domain(tab.url);
 
@@ -104,6 +107,8 @@ var ncr = {
 					ncr.ui.set_icon(ncr_applied, tabId);
 				}
 			}
+
+            ncr.nav_logger.indicate(tabId);
 		}
 	},
 
@@ -196,7 +201,7 @@ var ncr = {
 
 	get_domain: function (url) {
 		var reg_matches = ncr.re_domain.exec(url);
-		if (reg_matches.length > 1) {
+		if (reg_matches && reg_matches.length > 1) {
 			return reg_matches[1];
 		}
 		return "";
@@ -205,7 +210,7 @@ var ncr = {
 	init_interceptor: function () {
 		var filter = {
 			urls: ["<all_urls>"],   // no need to specify here particular urls since they are already defined in manifest permissions
-			types: ["main_frame"]  // interested only in main and sun frames
+			types: ["main_frame", "sub_frame"]  // interested only in main and sub frames
 		};
 
 		// intercept request to modify haders
@@ -217,6 +222,13 @@ var ncr = {
 	},
 
 	ui: {
+
+        BADGETYPES: {
+            redirlog: {
+                color: "#ddd"
+            }
+        },
+
 		set_icon: function (is_ncr, tab_id) {
 
 			var details = {
@@ -227,14 +239,137 @@ var ncr = {
 				}
 			};
 
-			chrome.pageAction.setIcon(details);
-			chrome.pageAction.show(tab_id);
-		}//,
+			chrome.browserAction.setIcon(details);
+		},
 
-//		remove_icon: function (tab_id) {
-//			chrome.pageAction.hide(tab_id);
-//		}
-	}
+        set_badge: function (text, type, tab_id) {
+            var color = "#d00", btype = {};
+            if (ncr.ui.BADGETYPES[type]) {
+                btype = ncr.ui.BADGETYPES[type];
+                color = btype.color;
+            }
+
+            chrome.browserAction.setBadgeText({
+                text: text,
+                tabId: tab_id
+            });
+            chrome.browserAction.setBadgeBackgroundColor({
+                color: color,
+                tabId: tab_id
+            });
+        }
+	},
+
+    nav_logger: {
+        redir_cache: {},    // storage for tracing requests per tab
+
+        init: function() {
+            chrome.webNavigation.onCommitted.addListener(ncr.nav_logger.on_committed);
+        },
+
+        on_committed: function (details) {
+            console.log("on_committed", details);
+            var _th = ncr.nav_logger,
+                tabid = details.tabId,
+                url = details.url,
+                type = details.transitionType;
+
+            // when the log should be reset
+            // possible types: "link", "typed", "auto_bookmark", "auto_subframe", "manual_subframe", "generated", "start_page", "form_submit", "reload", "keyword", or "keyword_generated"
+            var reset_types = ['link', 'typed', 'form_submit', 'reload'];
+            var new_session = true;
+
+            if (reset_types.indexOf(type) >= 0) {
+
+                // lets see whether we should start new session or not
+                if (details.transitionQualifiers) {
+                    if (details.transitionQualifiers.indexOf("server_redirect") >= 0 ||
+                        details.transitionQualifiers.indexOf("client_redirect")) {
+                        new_session = false;   // don't start new session if was redirected
+                    }
+                }
+
+                if (new_session) _th.start_session(tabid, false); // start new log session and clear previous one
+                _th.add_track(tabid, url, type, details.timeStamp);
+            }
+        },
+
+        start_session: function (tab_id, clear) {
+            var _th = ncr.nav_logger;
+            if (!_th.redir_cache[tab_id]) _th.redir_cache[tab_id] = []; // create an array if none is defined
+            var log = _th.redir_cache[tab_id];
+            log.push({type: "NEW"});    // start new "session"
+        },
+
+        add_track: function (tab_id, url, type, timestamp) {
+            var _th = ncr.nav_logger;
+
+            if (!_th.redir_cache[tab_id]) {
+                _th.start_session(tab_id);
+            }
+
+            _th.redir_cache[tab_id].push({
+                type: type,
+                url: url,
+                timestamp: timestamp
+            });
+        },
+
+        order_by_time: function (log) {
+            // sort
+            var sorted_log = log.sort(function(a,b){
+                return (a.timestamp > b.timestamp);
+            });
+
+            var unique_log = [], prev_url = "";
+
+            for (var i = 0 ; i < sorted_log.length; i++) {
+                if (prev_url == sorted_log[i].url) continue;
+                unique_log.push(sorted_log[i]);
+                prev_url = sorted_log[i].url;
+            }
+
+            return unique_log;
+        },
+
+        count_redirects: function (log) {
+            var exclude = ['reload', 'NEW', 'typed'],   // these are to be excluded types from counting
+                num = 0,    // number of redirects found
+                prev_url = "";
+
+            if (log && log.length > 0) {
+                for (var i=0; i < log.length; i++) {
+                    if (log[i].url == prev_url) continue;
+                    if (exclude.indexOf(log[i].type) < 0) {
+                        num++;
+                    }
+                    prev_url = log[i].url;
+                }
+            }
+
+            return num;
+        },
+
+        get_visible_log: function (tab_id) {
+            var _th = ncr.nav_logger;
+            var log = _th.redir_cache[tab_id];
+            log = _th.order_by_time(log);
+            return log;
+        },
+
+        indicate: function (tab_id) {
+            var _th = ncr.nav_logger,
+                log = _th.get_visible_log(tab_id),
+                redirects_number = _th.count_redirects(log);
+
+            if (log && redirects_number > 0) {
+                ncr.ui.set_badge(String(redirects_number), "redirlog", tab_id);
+            } else {
+                ncr.ui.set_badge("","", tab_id);
+            }
+        }
+    }
+
 };
 
 ncr.init();

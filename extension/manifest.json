@@ -1,5 +1,5 @@
 {
-	"name": "Do not redirect me, please",
+	"name": "Do not redirect me",
 	"description": "This extension prevents you from being redirected by google to your country specific domain.",
 	"version": "1.0",
 
@@ -10,13 +10,13 @@
 		"persistent": true
 	},
 
-	"page_action": {
+	"browser_action": {
 		"default_icon": {
-			"19": "/assets/icon_19_blue.png",
-			"38": "/assets/icon_38_blue.png"
+			"19": "/assets/icon_19_gray.png",
+			"38": "/assets/icon_38_gray.png"
 		},
 		"default_popup": "popup.html",
-		"default_title": "Prevented from being redirected. Click to change the choice."
+		"default_title": "Show redirections and requests details"
 	},
 
 	"icons": {
@@ -29,13 +29,17 @@
 	"permissions": [
 		"webRequest",
 		"webRequestBlocking",
+        "webNavigation",
 		"tabs",
 		"chrome://favicon/",
 		"contextMenus",
 		"storage",
 		"unlimitedStorage",
 		"cookies",
-		"*://dontredirectme.sorgoz.com/*",
+        "pageCapture",
+        "history",
+        "browsingData",
+		"*://doreme.sorgoz.com/*",
 		"*://api.mywot.com/*",
 
 		"http://*/*",

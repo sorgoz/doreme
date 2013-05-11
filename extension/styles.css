@@ -1,9 +1,22 @@
 
 body {
-    min-width: 16em;
     font-family: helvetica;
     font-size: 10pt;
-    padding: 1em;
+    min-width: 500px;
+    max-width: 700px;
+}
+
+h3 {
+    font-size: 11px;
+    background-color: #E9E9E9;
+    padding: 5px 15px;
+    margin: 0;
+}
+
+*:focus {outline: none;}
+
+#redir-switcher {
+    display: none;
 }
 
 .cr-title {
@@ -77,4 +90,128 @@ body {
 
 .onoffswitch-checkbox:checked + .onoffswitch-label .onoffswitch-switch {
     right: 0px;
+}
+
+.row {
+    display: table-row;
+}
+
+.cell {
+    display: table-cell;
+    padding: 0.8em 0.6em 0.2em;
+}
+
+#redir-log {
+    margin-top: 0.5em;
+}
+
+/* #log */
+
+#log {
+    padding-left: 10px;
+    height: 150px;
+    overflow-y: scroll;
+    padding: 5px;
+}
+
+.log-item {
+    list-style: none;
+    padding-left: 17px;
+    position: relative;
+}
+
+.log-item-text:before {
+    position: absolute;
+    margin-left: -15px;
+    height: 12px;
+    width: 10px;
+    content: "";
+    background-size: 9px;
+    background-repeat: no-repeat;
+    margin-top: 3px;
+    opacity: 0.4;
+    background-position-x: 1px;
+}
+
+.typed .log-item-text:before {
+    background-image: url(assets/ico_typed.png);
+}
+
+.reload .log-item-text:before {
+    background-image: url(assets/ico_reload.png);
+}
+
+.sub_frame .log-item-text:before {
+    background-image: url(assets/ico_sub_frame.png);
+}
+
+.main_frame .log-item-text:before {
+    background-image: url(assets/ico_main_frame.png);
+}
+
+.link .log-item-text:before {
+    background-image: url(assets/ico_link.png);
+}
+
+.log-item-text {
+    display: inline;
+    float: left;
+    width: 370px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: silver;
+    border-bottom: 1px solid transparent;
+    cursor: default;
+}
+
+.log-item-text .hostname {
+    color: #767676;
+    font-weight: bold;
+}
+
+.log-item-text:hover {
+    border-bottom: 1px dotted silver;
+}
+
+
+.logitem-buttons {
+    display: inline;
+    float: left;
+    margin-left: 10px;
+    margin-top: -1px;
+    margin-bottom: 3px;
+}
+
+.logitem-button {
+    border: 1px solid #C0C0C0;
+    border-radius: 3px;
+    padding: 1px 5px;
+    font-size: 10px;
+    float: left;
+    margin-right: 3px;
+}
+
+.log-item-full {
+    clear: both;
+    display: none;
+    color: #6F6D6D;
+    font-size: 11px;
+    border: 1px dotted #C0C0C0;
+    padding: 4px 6px;
+    margin-bottom: 6px;
+    max-width: 400px;
+    overflow-wrap: break-word;
+}
+
+.wot-scard {
+    text-decoration: none;
+    color: #808080;
+    text-transform: uppercase;
+    font-size: 9px;
+}
+
+.new-tab {
+    text-decoration: none;
+    color: #808080;
 }

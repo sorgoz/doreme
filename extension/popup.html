@@ -3,19 +3,62 @@
 
 <head>
     <link type="text/css" href="styles.css" rel="stylesheet"/>
+    <script src="jquery-1.9.1.min.js" type="text/javascript"></script>
 </head>
 
 <body>
-    <div class="cr-title">Country redirect for</div>
-    <div id="domain" class="domain">domain.com</div>
-    <div class="switcher">
-        <div class="onoffswitch">
-            <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="switch" checked>
-            <label class="onoffswitch-label" for="switch">
-                <div class="onoffswitch-inner"></div>
-                <div class="onoffswitch-switch"></div>
-            </label>
+    <div id="redir-switcher">
+        <div class="cr-title">Country redirect for</div>
+        <div id="domain" class="domain">domain.com</div>
+        <div class="switcher">
+            <div class="onoffswitch">
+                <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="switch" checked>
+                <label class="onoffswitch-label" for="switch">
+                    <div class="onoffswitch-inner"></div>
+                    <div class="onoffswitch-switch"></div>
+                </label>
+            </div>
         </div>
+    </div>
+    <div id="links">
+        <h3>Dig info about the website using</h3>
+        <div class="row">
+            <div class="cell">
+                <a href="http://who.is/whois/{HOST}" target="_blank">
+                    <img src="assets/logo_whois.png" height="16px" alt="Details on who.is" title="Check whois info"/>
+                </a>
+            </div>
+            <div class="cell">
+                <a href="http://solomono.ru/?search={URL}#/default.aspx?r=4&i={HOST}" target="_blank" title="Check donors on Solomono.ru">
+                    <img src="assets/logo_solomono.png" width="80px" alt="Solomono.ru"/>
+                </a>
+            </div>
+            <div class="cell">
+                <a href="http://yandex.ru/yandsearch?text=site%3A{HOST}&lr=0&numdoc=50" target="_blank">
+                    <img src="assets/logo_yandex.png" height="16px">
+                </a>
+            </div>
+            <div class="cell">
+                <a href="http://vk.com/search?c%5Bq%5D={HOST}&c%5Bsection%5D=auto" target="_blank">
+                    <img src="assets/logo_vk.jpg" height="16px">
+                </a>
+            </div>
+            <div class="cell">
+                <a href="https://www.google.com/search?q=site%3A{HOST}" target="_blank">Google</a>
+            </div>
+            <div class="cell">
+                <a href="http://trustorg.com/site/{HOST}" target="_blank">TrustOrg</a>
+            </div>
+            <div class="cell">
+                <a href="http://google.com/search?q=%22{HOST}%22+site%3Amywot.com" target="_blank">WOT site</a>
+            </div>
+        </div>
+        <div class="row"></div>
+        <div class="row"></div>
+    </div>
+    <div id="redir-log">
+        <h3>Redirections and requests log</h3>
+        <ul id="log"></ul>
     </div>
     <script src="popup.js" type="text/javascript"></script>
 </body>
