@@ -1,7 +1,8 @@
 
 var ncr = {
 
-	re_domain: new RegExp("^https?:\/\/([^\/]+)\/?", "i"),
+	re_domain: new RegExp("^https?:\/\/([^\/:]+)\/?", "i"),
+    WOT_APIKEY: "f8223315dac376ea9564afce9c98666ebd27b5c9",
 
 	applied: {}, // store status of NCR for recent domains
 
@@ -107,8 +108,6 @@ var ncr = {
 					ncr.ui.set_icon(ncr_applied, tabId);
 				}
 			}
-
-            ncr.nav_logger.indicate(tabId);
 		}
 	},
 
@@ -265,10 +264,16 @@ var ncr = {
 
         init: function() {
             chrome.webNavigation.onCommitted.addListener(ncr.nav_logger.on_committed);
+            chrome.webNavigation.onCompleted.addListener(ncr.nav_logger.on_completed);
+        },
+
+        on_completed: function (details) {
+            // prefetch reputation for all hostnames in the log
+            ncr.nav_logger.indicate(details.tabId);
         },
 
         on_committed: function (details) {
-            console.log("on_committed", details);
+//            console.log("on_committed", details);
             var _th = ncr.nav_logger,
                 tabid = details.tabId,
                 url = details.url,
@@ -317,6 +322,7 @@ var ncr = {
 
         order_by_time: function (log) {
             // sort
+            if (!log) return [];
             var sorted_log = log.sort(function(a,b){
                 return (a.timestamp > b.timestamp);
             });
@@ -357,19 +363,162 @@ var ncr = {
             return log;
         },
 
+        fetch_reputation: function (log, callback) {
+            var domains = [];
+            if (log && log.length) {
+                for (var i in log) {
+                    var d = ncr.get_domain(log[i].url);
+                    if (d && domains.indexOf(d) < 0) {
+                        domains.push(d);
+                    }
+                }
+            }
+
+//            console.log("domains?", domains);
+
+            if (domains.length) {
+                ncr.wot.request_reputation(domains, callback);
+            } else {
+                callback({});
+            }
+        },
+
         indicate: function (tab_id) {
             var _th = ncr.nav_logger,
                 log = _th.get_visible_log(tab_id),
                 redirects_number = _th.count_redirects(log);
 
-            if (log && redirects_number > 0) {
-                ncr.ui.set_badge(String(redirects_number), "redirlog", tab_id);
-            } else {
-                ncr.ui.set_badge("","", tab_id);
+            // prefetch reputation
+            _th.fetch_reputation(log, function (reputation_data) {
+//                console.log("after fetch rep", reputation_data);
+                if (log && redirects_number > 0) {
+                    ncr.ui.set_badge(String(redirects_number), "redirlog", tab_id);
+                } else {
+                    ncr.ui.set_badge("","", tab_id);
+                }
+            });
+        }
+    },
+
+    wot: {
+        cache: {},      // internal cache for reputation data
+        TTL: 3600 * 30, // time to live in cache. 30 minutes
+        API_URL: "https://api.mywot.com/0.4/public_link_json2",
+
+        reputationlevels: [
+            { name: "rx", min: -2 },
+            { name: "r0", min: -1 },
+            { name: "r1", min:  0 },
+            { name: "r2", min: 20 },
+            { name: "r3", min: 40 },
+            { name: "r4", min: 60 },
+            { name: "r5", min: 80 }
+        ],
+
+        confidencelevels: [
+            { name: "cx", min: -2 },
+            { name: "c0", min: -1 },
+            { name: "c1", min:  6 },
+            { name: "c2", min: 12 },
+            { name: "c3", min: 23 },
+            { name: "c4", min: 34 },
+            { name: "c5", min: 45 }
+        ],
+
+        apps: [0, 1, 2, 4],
+
+        request_reputation: function (domains, callback) {
+//            console.log("request_reputation()", domains);
+            var _th = ncr.wot,
+                domains = (typeof domains == "string") ? [domains] : domains,
+                need_request = [],  // hostnames to ask about
+                result = {};
+
+            for (var i=0; i < domains.length; i++) {
+                var d = domains[i],
+                    cached = _th.get_cached(d);
+                if (!cached) {
+                    need_request.push(d);
+                } else {
+                    result[d] = cached;
+                }
             }
+
+            if (need_request.length == 0) {
+                // woohoo! all reputation data is here, no need to ask WOT servers
+                callback(result);
+            } else {
+                _th._request(need_request, callback);
+            }
+
+        },
+
+        getlevel: function(levels, n)
+        {
+            for (var i = levels.length - 1; i >= 0; --i) {
+                if (n >= levels[i].min) {
+                    return levels[i];
+                }
+            }
+
+            return levels[1];
+        },
+
+        /* "Private" methods of the object */
+
+        _store: function (domain, data) {
+            var _th = ncr.wot;
+            _th.cache[domain] = {
+                dt: Date.now(),
+                data: data
+            }
+        },
+
+        get_cached: function (domain) {
+            var _th = ncr.wot,
+                item = _th.cache[domain];
+
+            if (item && (Date.now() - item.dt <= _th.TTL) && item.data) {
+                return item.data;
+            } else {
+                return false;
+            }
+        },
+
+        _process_response: function (data, callback) {
+//            console.log("response", data);
+            var _th = ncr.wot;
+            if (data) {
+                for (var d in data) {
+                    var rep = data[d];
+
+                    for (var app in rep) {
+                        var r = rep[app][0],    // reputation value
+                            c = rep[app][1];    // confidence
+
+                        rep[app].rl = _th.getlevel(_th.reputationlevels, r).name;
+                        rep[app].cl = _th.getlevel(_th.confidencelevels, c).name;
+                    }
+
+                    _th._store(d, rep);
+                }
+            }
+            callback(data);
+        },
+
+        _request: function (domains, callback) {
+            var _th = ncr.wot;
+//            console.log("_request()", domains);
+            $.getJSON(_th.API_URL,
+                {
+                    hosts: domains.join("/") + "/",
+                    key: ncr.WOT_APIKEY
+                },
+                function(data) {
+                    _th._process_response(data, callback);
+                });
         }
     }
-
 };
 
 ncr.init();

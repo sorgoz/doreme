@@ -170,6 +170,22 @@ h3 {
     font-weight: bold;
 }
 
+.r1 .log-item-text .hostname,
+.r2 .log-item-text .hostname {
+    color: #f76d66;
+}
+
+.r3 .log-item-text .hostname {
+    color: #fecd35;
+}
+
+.r4 .log-item-text .hostname {
+    color: #84ca4a;
+}
+.r5 .log-item-text .hostname {
+    color: #4E9B0F;
+}
+
 .log-item-text:hover {
     border-bottom: 1px dotted silver;
 }

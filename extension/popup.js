@@ -54,9 +54,10 @@ var popup = {
 
     _make_logitem: function (item) {
         var url = item.url || "NOT A LINK?",
-            host = popup.bg.ncr.get_domain(url) || "";
+            host = popup.bg.ncr.get_domain(url) || "",
+            cached_rep = popup.bg.ncr.wot.get_cached(host);
 
-        var url_text = url.replace(host, '<span class="hostname">'+host+'</span>');
+        var url_text = url.replace(host, '<span class="hostname" host="' + host + '">'+host+'</span>');
 
         var s =
         '<li class="log-item">' +
@@ -74,6 +75,12 @@ var popup = {
 
         var $_item = $(s);
         $_item.addClass(item.type);
+
+        if (cached_rep) {
+            var tr = cached_rep[0],
+                trust_level = tr ? tr.rl : "r0";
+            $_item.addClass(trust_level);
+        }
 
         return $_item;
     },
