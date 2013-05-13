@@ -481,6 +481,7 @@ var ncr = {
             if (item && (Date.now() - item.dt <= _th.TTL) && item.data) {
                 return item.data;
             } else {
+                _th._request([domain], function(){});
                 return false;
             }
         },
