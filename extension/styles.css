@@ -19,6 +19,17 @@ h3 {
     display: none;
 }
 
+.btn-link {
+    border: 1px solid #D8D8D8;
+    border-radius: 3px;
+    padding: 3px 4px;
+    text-decoration: none;
+}
+
+.btn-link:hover {
+    text-decoration: underline;
+}
+
 .cr-title {
     text-align: center;
 }
@@ -98,7 +109,7 @@ h3 {
 
 .cell {
     display: table-cell;
-    padding: 0.8em 0.6em 0.2em;
+    padding: 0.8em 0.5em 0.2em;
 }
 
 #redir-log {
