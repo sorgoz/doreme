@@ -6,6 +6,8 @@ var ncr = {
 
 	applied: {}, // store status of NCR for recent domains
 
+    block: {},
+
 	init : function() {
 //		console.log("started");
 		ncr.init_interceptor();
@@ -95,11 +97,18 @@ var ncr = {
 		return {requestHeaders: details.requestHeaders};
 	},
 
+    intercept: function (details) {
+        if (ncr.block[details.url]) {
+            delete ncr.block[details.url];  // clear temporary block registry
+            ncr.ui.set_badge("BLK", "blocked", details.tabId);
+            ncr.ui.set_icon(true, details.tabId);
+            return {cancel: true};
+        }
+    },
+
 	indicate: function (tabId, changeInfo, tab) {
 
 		if (changeInfo.status == "complete") {
-//			console.log(arguments);
-
 			var domain = ncr.get_domain(tab.url);
 
 			if (ncr.applied[domain]) {
@@ -215,6 +224,9 @@ var ncr = {
 		// intercept request to modify haders
 		chrome.webRequest.onBeforeSendHeaders.addListener(ncr.decide, filter, ["blocking", "requestHeaders"]);
 
+        // intecept all responses and check whether it is a server redirect to be able to block it
+        chrome.webRequest.onBeforeRequest.addListener(ncr.intercept, filter, ["blocking"]);
+
 		// listen when the request is completed
 		chrome.tabs.onUpdated.addListener(ncr.indicate);
 
@@ -225,6 +237,9 @@ var ncr = {
         BADGETYPES: {
             redirlog: {
                 color: "#ddd"
+            },
+            blocked: {
+                color: "#703030"
             }
         },
 
@@ -388,15 +403,17 @@ var ncr = {
                 log = _th.get_visible_log(tab_id),
                 redirects_number = _th.count_redirects(log);
 
-            // prefetch reputation
-            _th.fetch_reputation(log, function (reputation_data) {
+            if (log) {
+                // prefetch reputation
+                _th.fetch_reputation(log, function (reputation_data) {
 //                console.log("after fetch rep", reputation_data);
-                if (log && redirects_number > 0) {
-                    ncr.ui.set_badge(String(redirects_number), "redirlog", tab_id);
-                } else {
-                    ncr.ui.set_badge("","", tab_id);
-                }
-            });
+                    if (log && redirects_number > 0) {
+                        ncr.ui.set_badge(String(redirects_number), "redirlog", tab_id);
+                    } else {
+                        ncr.ui.set_badge("","", tab_id);
+                    }
+                });
+            }
         }
     },
 
@@ -509,7 +526,7 @@ var ncr = {
 
         _request: function (domains, callback) {
             var _th = ncr.wot;
-//            console.log("_request()", domains);
+
             $.getJSON(_th.API_URL,
                 {
                     hosts: domains.join("/") + "/",

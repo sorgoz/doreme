@@ -47,6 +47,8 @@ var popup = {
                 $_log.append($_item);
             }
 
+            $(document).on("click", "a.new-tab", popup.block_and_go);
+
         } else {
             $_log.append("<li class='log-item'><div class='log-item-text'>No redirects found.</div></li>");
         }
@@ -64,10 +66,10 @@ var popup = {
             '<div class="log-item-text">'+ url_text +'</div>' +
             '<div class="logitem-buttons">' +
                 '<div class="logitem-button">' +
-                    '<a href="http://www.mywot.com/s/' + host + '" class="wot-scard" target="_blank">WOT</a>' +
+                    '<a href="http://beta.mywot.com/scorecard/' + host + '" class="wot-scard" target="_blank">WOT</a>' +
                 '</div>' +
                 '<div class="logitem-button">' +
-                    '<a href="'+ url +'" class="new-tab" target="_blank">tab</a>' +
+                    '<a href="'+ url +'" class="new-tab" title="Open in new tab and stop redirect" target="_blank">tab</a>' +
                 '</div>' +
             '</div>' +
             '<div class="log-item-full">' + url + '</div>' +
@@ -91,7 +93,17 @@ var popup = {
                 callback(tabs[0]);
             }
         });
-	}
+	},
+
+    block_and_go: function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        var elem = $(this);
+        var url = elem.prop("href");
+        popup.bg.ncr.block[url] = true;
+        chrome.tabs.create({url: url});
+    }
 
 
 };
