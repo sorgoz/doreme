@@ -37,20 +37,28 @@ var popup = {
     show_redirection_log: function (tab_id) {
         var log = popup.bg.ncr.nav_logger.get_visible_log(tab_id),
             prev_url = "";
-        var $_log = $("#log");
+        var $_log_main = $("#log"),
+            $_log_frames = $("#log-frames");
 
         if (log && log.length) {
             for(var i=0; i < log.length; i++) {
                 var item = log[i];
                 if (item.type == "NEW" || item.url == prev_url) continue;   // skip session begin marker
                 var $_item = popup._make_logitem(item);
-                $_log.append($_item);
+
+                // separate frame traffic from main page traffic
+                if (item.type == "sub_frame") {
+                    $_log_frames.append($_item);
+                } else {
+                    $_log_main.append($_item);
+                }
+
             }
 
             $(document).on("click", "a.new-tab", popup.block_and_go);
 
         } else {
-            $_log.append("<li class='log-item'><div class='log-item-text'>No redirects found.</div></li>");
+            $_log_main.append("<li class='log-item'><div class='log-item-text'>No redirects found.</div></li>");
         }
     },
 

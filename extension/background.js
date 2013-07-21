@@ -419,7 +419,7 @@ var ncr = {
 
     wot: {
         cache: {},      // internal cache for reputation data
-        TTL: 3600 * 30, // time to live in cache. 30 minutes
+        TTL: 3600 * 50, // time to live in cache. 50 minutes
         API_URL: "https://api.mywot.com/0.4/public_link_json2",
 
         reputationlevels: [

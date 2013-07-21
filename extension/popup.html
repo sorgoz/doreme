@@ -24,6 +24,11 @@
         <h3>Dig info about the website using</h3>
         <div class="row">
             <div class="cell">
+                <a href="http://yandex.ru/yandsearch?text=site%3A{HOST}&lr=0&numdoc=50" target="_blank">
+                    <img src="assets/logo_yandex.png" height="16px">
+                </a>
+            </div>
+            <div class="cell">
                 <a href="http://who.is/whois/{HOST}" target="_blank">
                     <img src="assets/logo_whois.png" height="16px" alt="Details on who.is" title="Check whois info"/>
                 </a>
@@ -39,11 +44,6 @@
                 </a>
             </div>
             <div class="cell">
-                <a href="http://yandex.ru/yandsearch?text=site%3A{HOST}&lr=0&numdoc=50" target="_blank">
-                    <img src="assets/logo_yandex.png" height="16px">
-                </a>
-            </div>
-            <div class="cell">
                 <a href="http://vk.com/search?c%5Bq%5D={HOST}&c%5Bsection%5D=auto" target="_blank">
                     <img src="assets/logo_vk.jpg" height="16px">
                 </a>
@@ -51,6 +51,11 @@
             <div class="cell">
                 <a href="http://web.archive.org/web/*/http://{HOST}/" target="_blank" title="View copy of the site on Internet Archive">
                     <img src="assets/logo_WM.png" height="22px">
+                </a>
+            </div>
+            <div class="cell">
+                <a href="http://www.urlvoid.com/scan/{HOST}/" target="_blank" title="Scan domain by URLVoid">
+                    <img src="assets/logo_urlvoid.png" height="22px">
                 </a>
             </div>
         </div>
@@ -64,12 +69,19 @@
             <div class="cell">
                 <a href="http://google.com/search?q=%22{HOST}%22+site%3Amywot.com" class="btn-link" target="_blank">WOT site</a>
             </div>
+            <div class="cell">
+                <a href="http://www.securrity.ru/url_analysis.html?url={URL}" class="btn-link" target="_blank">Securrity.Ru</a>
+            </div>
         </div>
         <div class="row"></div>
     </div>
-    <div id="redir-log">
-        <h3>Redirections and requests log</h3>
-        <ul id="log"></ul>
+    <div id="redir-log" class="redir-log">
+        <h3>Mainframe redirects</h3>
+        <ul id="log" class="redir-log-list"></ul>
+    </div>
+    <div id="redir-log-frames" class="redir-log">
+        <h3>Subframes redirects</h3>
+        <ul id="log-frames" class="redir-log-list"></ul>
     </div>
     <script src="popup.js" type="text/javascript"></script>
 </body>
