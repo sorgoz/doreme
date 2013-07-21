@@ -1,6 +1,6 @@
 {
 	"name": "Do not redirect me",
-	"description": "This extension prevents you from being redirected by google to your country specific domain.",
+	"description": "Prevents you from being redirected by google to your country specific domain and reveal info about other redirects.",
 	"version": "1.5",
 
 	"manifest_version": 2,
