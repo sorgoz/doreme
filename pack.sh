@@ -13,8 +13,7 @@ fi
 
 rm -f doreme.zip
 
-# move to the directory, remove update_url from the manifest,
-# and create a zip of the contents
+# create a zip of the contents
 
 cd gallery && \
 	zip -r -0 ../doreme.zip . && \
